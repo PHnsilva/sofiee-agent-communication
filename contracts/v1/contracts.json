@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "contractVersion": "1.0.0",
+  "purpose": "MCP tool contracts for communication; schemas are proposals and do not imply runtime availability.",
+  "errorSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://sofiee-agent-communication.local/contracts/v1/error.schema.json",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["contractVersion", "code", "message", "retryable"],
+    "properties": {
+      "contractVersion": { "const": "1.0.0" },
+      "code": { "enum": ["invalid_request", "context_limit", "unsupported_locale", "ambiguous_request", "media_unavailable", "cancelled", "unavailable", "internal_error"] },
+      "message": { "type": "string", "minLength": 1, "maxLength": 500 },
+      "retryable": { "type": "boolean" }
+    }
+  },
+  "tools": [
+    {
+      "name": "communication.respond",
+      "sideEffects": false,
+      "description": "Interpret one text turn and return a reply or clarification; no action is authorized in the consumer.",
+      "errorCodes": ["invalid_request", "context_limit", "unsupported_locale", "ambiguous_request", "unavailable", "internal_error"],
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/respond.input.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "sessionId", "locale", "text", "history"],
+        "properties": {
+          "contractVersion": { "const": "1.0.0" },
+          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "locale": { "enum": ["pt-BR", "en", "und"] },
+          "text": { "type": "string", "minLength": 1, "maxLength": 10000 },
+          "history": { "type": "array", "maxItems": 12, "items": { "type": "object", "additionalProperties": false, "required": ["role", "text"], "properties": { "role": { "enum": ["user", "assistant"] }, "text": { "type": "string", "minLength": 1, "maxLength": 2000 } } } }
+        }
+      },
+      "resultSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/respond.result.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "status", "locale", "intent", "content", "entities", "clarificationQuestions"],
+        "properties": {
+          "contractVersion": { "const": "1.0.0" },
+          "status": { "enum": ["complete", "needs_clarification", "handoff"] },
+          "locale": { "enum": ["pt-BR", "en", "und"] },
+          "intent": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "content": { "type": "string", "maxLength": 12000 },
+          "entities": { "type": "array", "maxItems": 100, "items": { "type": "object", "additionalProperties": false, "required": ["name", "value"], "properties": { "name": { "type": "string", "minLength": 1, "maxLength": 100 }, "value": { "type": "string", "minLength": 1, "maxLength": 1000 } } } },
+          "clarificationQuestions": { "type": "array", "maxItems": 5, "items": { "type": "string", "minLength": 1, "maxLength": 500 } }
+        }
+      },
+      "examples": {
+        "validInput": { "contractVersion": "1.0.0", "sessionId": "session_demo", "locale": "pt-BR", "text": "Pode resumir este aviso?", "history": [] },
+        "invalidInput": { "contractVersion": "1.0.0", "sessionId": "session_demo", "locale": "es", "text": "Oi", "history": [], "execute": true },
+        "validResult": { "contractVersion": "1.0.0", "status": "complete", "locale": "pt-BR", "intent": "summarize", "content": "Resumo solicitado.", "entities": [], "clarificationQuestions": [] },
+        "error": { "contractVersion": "1.0.0", "code": "invalid_request", "message": "A solicitação não corresponde ao schema.", "retryable": false }
+      }
+    },
+    {
+      "name": "communication.transform",
+      "sideEffects": false,
+      "description": "Rewrite, summarize, adapt tone, or translate text while preserving supplied constraints.",
+      "errorCodes": ["invalid_request", "context_limit", "unsupported_locale", "unavailable", "internal_error"],
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/transform.input.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "operation", "text", "sourceLocale", "targetLocale", "constraints", "tone"],
+        "properties": {
+          "contractVersion": { "const": "1.0.0" },
+          "operation": { "enum": ["rewrite", "summarize", "adapt_tone", "translate"] },
+          "text": { "type": "string", "minLength": 1, "maxLength": 20000 },
+          "sourceLocale": { "enum": ["pt-BR", "en", "und"] },
+          "targetLocale": { "enum": ["pt-BR", "en"] },
+          "constraints": { "type": "array", "maxItems": 30, "items": { "type": "string", "minLength": 1, "maxLength": 500 } },
+          "tone": { "enum": ["neutral", "formal", "friendly", "concise"] }
+        }
+      },
+      "resultSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/transform.result.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "status", "text", "preservedEntities", "uncertainSpans"],
+        "properties": {
+          "contractVersion": { "const": "1.0.0" },
+          "status": { "enum": ["complete", "needs_review"] },
+          "text": { "type": "string", "maxLength": 24000 },
+          "preservedEntities": { "type": "array", "maxItems": 100, "items": { "type": "string", "minLength": 1, "maxLength": 1000 } },
+          "uncertainSpans": { "type": "array", "maxItems": 50, "items": { "type": "string", "minLength": 1, "maxLength": 500 } }
+        }
+      },
+      "examples": {
+        "validInput": { "contractVersion": "1.0.0", "operation": "translate", "text": "Entrega amanhã às 9h.", "sourceLocale": "pt-BR", "targetLocale": "en", "constraints": ["Preserve the time."], "tone": "neutral" },
+        "invalidInput": { "contractVersion": "1.0.0", "operation": "translate", "text": "Oi", "sourceLocale": "pt-BR", "targetLocale": "es", "constraints": [], "tone": "neutral" },
+        "validResult": { "contractVersion": "1.0.0", "status": "complete", "text": "Delivery is tomorrow at 9 a.m.", "preservedEntities": ["9h"], "uncertainSpans": [] },
+        "error": { "contractVersion": "1.0.0", "code": "unsupported_locale", "message": "O idioma de destino não é aceito neste contrato.", "retryable": false }
+      }
+    },
+    {
+      "name": "communication.transcribe",
+      "sideEffects": false,
+      "description": "Transcribe caller-supplied audio identified by an opaque host-managed reference; never fetch a caller-provided path or URL.",
+      "errorCodes": ["invalid_request", "media_unavailable", "unsupported_locale", "context_limit", "unavailable", "internal_error"],
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/transcribe.input.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "mediaRef", "mediaType", "localeHint"],
+        "properties": {
+          "contractVersion": { "const": "1.0.0" },
+          "mediaRef": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,128}$" },
+          "mediaType": { "enum": ["audio/wav", "audio/mpeg", "audio/ogg"] },
+          "localeHint": { "enum": ["pt-BR", "en", "und"] }
+        }
+      },
+      "resultSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/transcribe.result.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "status", "transcript", "detectedLocale", "quality"],
+        "properties": {
+          "contractVersion": { "const": "1.0.0" },
+          "status": { "enum": ["transcribed", "uncertain", "unavailable"] },
+          "transcript": { "type": "string", "maxLength": 20000 },
+          "detectedLocale": { "enum": ["pt-BR", "en", "und"] },
+          "quality": { "enum": ["clear", "uncertain", "unavailable"] }
+        }
+      },
+      "examples": {
+        "validInput": { "contractVersion": "1.0.0", "mediaRef": "audio_demo_1", "mediaType": "audio/wav", "localeHint": "pt-BR" },
+        "invalidInput": { "contractVersion": "1.0.0", "mediaRef": "C:/private/audio.wav", "mediaType": "audio/wav", "localeHint": "pt-BR" },
+        "validResult": { "contractVersion": "1.0.0", "status": "uncertain", "transcript": "Vá para...", "detectedLocale": "pt-BR", "quality": "uncertain" },
+        "error": { "contractVersion": "1.0.0", "code": "media_unavailable", "message": "O host não disponibilizou esta referência de áudio.", "retryable": true }
+      }
+    },
+    {
+      "name": "communication.synthesize",
+      "sideEffects": false,
+      "description": "Synthesize speech in pt-BR or English and return an opaque host-managed audio reference.",
+      "errorCodes": ["invalid_request", "unsupported_locale", "context_limit", "unavailable", "internal_error"],
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/synthesize.input.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "text", "locale", "mediaType"],
+        "properties": {
+          "contractVersion": { "const": "1.0.0" },
+          "text": { "type": "string", "minLength": 1, "maxLength": 12000 },
+          "locale": { "enum": ["pt-BR", "en"] },
+          "mediaType": { "enum": ["audio/wav", "audio/mpeg"] }
+        }
+      },
+      "resultSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/synthesize.result.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "status", "mediaRef", "mediaType", "durationMs"],
+        "properties": {
+          "contractVersion": { "const": "1.0.0" },
+          "status": { "enum": ["generated", "unavailable"] },
+          "mediaRef": { "type": "string", "maxLength": 128 },
+          "mediaType": { "enum": ["audio/wav", "audio/mpeg"] },
+          "durationMs": { "type": "integer", "minimum": 0, "maximum": 3600000 }
+        }
+      },
+      "examples": {
+        "validInput": { "contractVersion": "1.0.0", "text": "Olá, mundo.", "locale": "pt-BR", "mediaType": "audio/wav" },
+        "invalidInput": { "contractVersion": "1.0.0", "text": "", "locale": "pt-BR", "mediaType": "audio/wav", "path": "C:/out.wav" },
+        "validResult": { "contractVersion": "1.0.0", "status": "generated", "mediaRef": "speech_demo_1", "mediaType": "audio/wav", "durationMs": 1400 },
+        "error": { "contractVersion": "1.0.0", "code": "unavailable", "message": "Nenhum sintetizador local compatível está disponível.", "retryable": true }
+      }
+    },
+    {
+      "name": "communication.cancelTurn",
+      "sideEffects": false,
+      "description": "Cancel only an in-process turn; it does not interrupt external devices or applications.",
+      "errorCodes": ["invalid_request", "unavailable", "internal_error"],
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/cancel-turn.input.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "sessionId", "turnId"],
+        "properties": { "contractVersion": { "const": "1.0.0" }, "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 }, "turnId": { "type": "string", "minLength": 1, "maxLength": 128 } }
+      },
+      "resultSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://sofiee-agent-communication.local/contracts/v1/cancel-turn.result.schema.json",
+        "type": "object", "additionalProperties": false,
+        "required": ["contractVersion", "status", "turnId"],
+        "properties": { "contractVersion": { "const": "1.0.0" }, "status": { "enum": ["cancelled", "not_found"] }, "turnId": { "type": "string", "minLength": 1, "maxLength": 128 } }
+      },
+      "examples": {
+        "validInput": { "contractVersion": "1.0.0", "sessionId": "session_demo", "turnId": "turn_2" },
+        "invalidInput": { "contractVersion": "1.0.0", "sessionId": "session_demo", "turnId": "" },
+        "validResult": { "contractVersion": "1.0.0", "status": "cancelled", "turnId": "turn_2" },
+        "error": { "contractVersion": "1.0.0", "code": "invalid_request", "message": "turnId deve ser não vazio.", "retryable": false }
+      }
+    }
+  ]
+}
