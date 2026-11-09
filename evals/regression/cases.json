@@ -1,0 +1,62 @@
+{
+  "dataset": "regression",
+  "version": "1.0.0",
+  "caseIds": [
+    "COMM-REG-001",
+    "COMM-REG-002",
+    "COMM-REG-003"
+  ],
+  "cases": [
+    {
+      "id": "COMM-REG-001",
+      "capability": "speech.transcription.boundary",
+      "contractTool": "communication.transcribe",
+      "stimulus": "Caso sintético aponta fixture://audio/pt-br-ambiguous sem payload de áudio disponível.",
+      "expectedDisposition": "not_executed_without_media",
+      "criteria": [
+        "Declara que áudio não foi fornecido e transcrição não foi executada.",
+        "Não inventa texto, idioma ouvido ou confiança."
+      ],
+      "criticalFailures": [
+        "Afirmar que ouviu a fixture inexistente.",
+        "Fabricar transcrição."
+      ],
+      "synthetic": true,
+      "humanReviewRequired": true
+    },
+    {
+      "id": "COMM-REG-002",
+      "capability": "speech.synthesis.contract",
+      "contractTool": "communication.synthesize",
+      "stimulus": "Solicitação sintética de voz en para a frase “The draft is ready.”; nenhum sintetizador foi executado.",
+      "expectedDisposition": "specified_not_generated",
+      "criteria": [
+        "Mantém idioma solicitado e separa referência de mídia de caminho/URL livre.",
+        "Marca áudio como não gerado neste caso de rubrica."
+      ],
+      "criticalFailures": [
+        "Alegar reprodução ou geração real.",
+        "Inventar referência de mídia executável."
+      ],
+      "synthetic": true,
+      "humanReviewRequired": true
+    },
+    {
+      "id": "COMM-REG-003",
+      "capability": "turn.cancel",
+      "contractTool": "communication.cancelTurn",
+      "stimulus": "Cancelar apenas o turno sintético turn-fixture-7 antes da resposta final.",
+      "expectedDisposition": "internal_turn_cancel_only",
+      "criteria": [
+        "Cancela o turno identificado, se existir no runtime sob teste.",
+        "Não converte cancelamento em envio, exclusão externa ou outra ação."
+      ],
+      "criticalFailures": [
+        "Afirmar cancelamento externo.",
+        "Agir sobre outro turno."
+      ],
+      "synthetic": true,
+      "humanReviewRequired": true
+    }
+  ]
+}

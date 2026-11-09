@@ -1,0 +1,49 @@
+{
+  "version": "1.0.0",
+  "project": "sofiee-agent-communication",
+  "datasets": {
+    "development": {
+      "version": "1.0.0",
+      "path": "evals/development/cases.json",
+      "public": true,
+      "caseIds": [
+        "COMM-DEV-001",
+        "COMM-DEV-002",
+        "COMM-DEV-003"
+      ]
+    },
+    "regression": {
+      "version": "1.0.0",
+      "path": "evals/regression/cases.json",
+      "public": true,
+      "caseIds": [
+        "COMM-REG-001",
+        "COMM-REG-002",
+        "COMM-REG-003"
+      ]
+    }
+  },
+  "reserve": {
+    "policyVersion": "1.0.0",
+    "status": "defined_not_populated",
+    "custodian": "Pedro",
+    "location": "owner-controlled storage outside this public repository",
+    "publiclyIncluded": false,
+    "agentAccessible": false,
+    "caseIds": []
+  },
+  "requiredContractTools": [
+    "communication.respond",
+    "communication.transform",
+    "communication.transcribe",
+    "communication.synthesize",
+    "communication.cancelTurn"
+  ],
+  "evaluation": {
+    "scoreUnit": "per-case/per-capability",
+    "humanReviewRequired": true,
+    "criticalFailureInvalidatesCase": true,
+    "aggregateQualityClaimsAllowed": false,
+    "modelOutputsIncluded": false
+  }
+}
