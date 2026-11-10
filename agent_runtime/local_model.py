@@ -35,7 +35,7 @@ class LocalModel:
         if not 1 <= timeout_seconds <= 120:
             raise ValueError("timeout_seconds must be between 1 and 120")
         if not 1 <= max_input_chars <= 24_000:
-            raise ValueError("max_input_chars must be between 1 and 20000")
+            raise ValueError("max_input_chars must be between 1 and 24000")
         if not 1 <= max_output_tokens <= 1024:
             raise ValueError("max_output_tokens must be between 1 and 1024")
         if model is not None and re.fullmatch(r"[A-Za-z0-9._:/-]{1,200}", model) is None:
