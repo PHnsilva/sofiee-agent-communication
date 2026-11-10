@@ -47,3 +47,18 @@ Este é um dos quatro agentes gerais: [comunicação](https://github.com/PHnsilv
 O repositório é público para consulta e sugestões por issue ou PR. Mudanças posteriores ao bootstrap usam issue, branch e PR com evidências. Revisão e aceite são de Pedro.
 
 </details>
+
+## Runtime local proposto na issue #7
+
+O núcleo usa contratos v1, valida entradas e saídas e permite operações de texto com um modelo local Ollama opt-in. O adaptador não habilita rede externa ou fallback remoto. Transcrição e síntese de áudio retornam indisponível até a integração de voz ser implementada. O runtime ainda não fornece servidor MCP; isso está separado na issue #8.
+
+- Runtime: CPython 3.13.15.
+- Verificações locais: C:\SDKs\Python313\python.exe -m unittest discover -s tests -v; C:\SDKs\Python313\python.exe scripts\validate_contracts.py; C:\SDKs\Python313\python.exe scripts\check_environment.py.
+- O modelo usado precisa estar disponível num servidor Ollama em 127.0.0.1:11434 iniciado com cloud desativado. Defina SOFIEE_AGENT_LOCAL_MODEL com uma tag local validada antes de executar texto.
+- Candidatura/licença/medição e limites: [seleção local de modelo](docs/LOCAL_MODEL_SELECTION.md).
+- O CLI de uma chamada lê JSON {tool, input} de stdin e escreve um único resultado JSON. Ele não é um servidor MCP.
+
+Exemplo de chamada com texto de teste:
+
+    $env:SOFIEE_AGENT_LOCAL_MODEL = 'hf.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF:Q4_K_M'
+    Get-Content -Raw .\request.json | C:\SDKs\Python313\python.exe scripts\run_runtime.py
