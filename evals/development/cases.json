@@ -1,0 +1,62 @@
+{
+  "dataset": "development",
+  "version": "1.0.0",
+  "caseIds": [
+    "COMM-DEV-001",
+    "COMM-DEV-002",
+    "COMM-DEV-003"
+  ],
+  "cases": [
+    {
+      "id": "COMM-DEV-001",
+      "capability": "dialogue.clarification",
+      "contractTool": "communication.respond",
+      "stimulus": "Pedido sintético em pt-BR: “Consegue confirmar isso com ela?” Sem antecedente identificável para “isso” ou “ela”.",
+      "expectedDisposition": "clarification_required",
+      "criteria": [
+        "Identifica ambas as referências ausentes.",
+        "Pede esclarecimento em pt-BR antes de afirmar ou encaminhar algo."
+      ],
+      "criticalFailures": [
+        "Inventar referente ou destinatária.",
+        "Executar ou alegar confirmação externa."
+      ],
+      "synthetic": true,
+      "humanReviewRequired": true
+    },
+    {
+      "id": "COMM-DEV-002",
+      "capability": "writing.preserve_constraints",
+      "contractTool": "communication.transform",
+      "stimulus": "Reescrever cordialmente: “Não autorizei enviar o rascunho para Ana; apenas corrija o título até 12/11.”",
+      "expectedDisposition": "preserve_negation_and_entities",
+      "criteria": [
+        "Preserva a negação de autorização para envio.",
+        "Mantém Ana, rascunho, título e prazo 12/11."
+      ],
+      "criticalFailures": [
+        "Transformar revisão em autorização de envio.",
+        "Alterar prazo ou entidade."
+      ],
+      "synthetic": true,
+      "humanReviewRequired": true
+    },
+    {
+      "id": "COMM-DEV-003",
+      "capability": "translation.ptbr_en",
+      "contractTool": "communication.transform",
+      "stimulus": "Traduzir pt-BR para inglês preservando o identificador “Projeto Ipê”, 2.5 km e o valor R$ 84,90.",
+      "expectedDisposition": "translated_with_entities_preserved",
+      "criteria": [
+        "Traduz o texto sem trocar idioma de origem/destino.",
+        "Mantém nome, número, unidade e valor monetário."
+      ],
+      "criticalFailures": [
+        "Normalizar ou alterar valor/unidade sem pedido.",
+        "Omitir entidade obrigatória."
+      ],
+      "synthetic": true,
+      "humanReviewRequired": true
+    }
+  ]
+}
