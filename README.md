@@ -62,3 +62,10 @@ Exemplo de chamada com texto de teste:
 
     $env:SOFIEE_AGENT_LOCAL_MODEL = 'hf.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF:Q4_K_M'
     Get-Content -Raw .\request.json | C:\SDKs\Python313\python.exe scripts\run_runtime.py
+
+
+## Servidor MCP local — issue #8
+
+O servidor interno expõe somente as ferramentas MCP versionadas em `contracts/v1/contracts.json`. Execute com CPython 3.13.15 e as dependências exatas de `requirements.lock`: `python -m agent_runtime.mcp_server`. O transporte local usa stdio; stdout é reservado ao protocolo. Não fornece shell, caminhos de arquivo ou acesso de rede arbitrários. Operações que exigem modelo ou fonte continuam sujeitas aos limites e estados retornados pelo runtime.
+
+Para preparar um ambiente virtual isolado com as versões fixadas, execute python -m pip install -r requirements.lock depois de ativar o CPython 3.13.15.
