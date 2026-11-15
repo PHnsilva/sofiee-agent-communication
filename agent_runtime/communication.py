@@ -5,11 +5,27 @@ from __future__ import annotations
 import threading
 from typing import Any
 
-from .contracts import CONTRACT, ContractViolation, error_result, validate_input, validate_result
+from .contracts import CONTRACT, TOOLS, ContractViolation, error_result, validate_input, validate_result
 from .local_model import LocalModel, ModelCallError
 
 
 VERSION = CONTRACT["contractVersion"]
+
+
+def _history_exceeds_context_limit(payload: Any) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    history = payload.get("history")
+    if not isinstance(history, list):
+        return False
+    history_schema = TOOLS["communication.respond"]["inputSchema"]["properties"]["history"]
+    if len(history) > history_schema.get("maxItems", len(history)):
+        return True
+    text_limit = history_schema.get("items", {}).get("properties", {}).get("text", {}).get("maxLength")
+    return isinstance(text_limit, int) and any(
+        isinstance(item, dict) and isinstance(item.get("text"), str) and len(item["text"]) > text_limit
+        for item in history
+    )
 
 
 def _configured_model() -> LocalModel:
@@ -114,6 +130,11 @@ def execute(
         validate_result(tool_name, result)
         return result
     except ContractViolation as exc:
+        if tool_name == "communication.respond" and _history_exceeds_context_limit(payload):
+            return error_result(
+                "context_limit",
+                "O histórico excede o limite da sessão; envie apenas os turnos relevantes ou um resumo explícito.",
+            )
         return error_result("invalid_request", str(exc))
     except ModelCallError as exc:
         return error_result(exc.code, str(exc), exc.retryable)

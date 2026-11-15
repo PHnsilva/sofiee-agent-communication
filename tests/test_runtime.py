@@ -14,9 +14,11 @@ class FakeModel:
     def __init__(self, result):
         self.result = result
         self.calls = 0
+        self.inputs = []
 
     def generate_json(self, instruction, data, *, cancel_event=None):
         self.calls += 1
+        self.inputs.append(data)
         return self.result
 
 
@@ -57,6 +59,56 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(fake.calls, 1)
         self.assertEqual(result["status"], "complete")
         self.assertEqual(result["content"], "O aviso pede um resumo.")
+
+    def test_dialogue_passes_ordered_turns_without_session_identity_or_cross_session_state(self):
+        fake = FakeModel(
+            {
+                "locale": "pt-BR",
+                "intent": "refine_request",
+                "content": "Camisa branca tamanho M.",
+                "entities": [],
+                "clarificationQuestions": [],
+            }
+        )
+        first = dict(TOOLS["communication.respond"]["examples"]["validInput"])
+        first.update(
+            sessionId="session-a",
+            text="Agora quero branca.",
+            history=[
+                {"role": "user", "text": "Procuro uma camisa tamanho M."},
+                {"role": "assistant", "text": "Certo, vou manter o tamanho M."},
+            ],
+        )
+        second = dict(first, sessionId="session-b", history=[{"role": "user", "text": "Procuro calças tamanho 40."}])
+
+        self.assertEqual(execute("communication.respond", first, model=fake)["status"], "complete")
+        self.assertEqual(execute("communication.respond", second, model=fake)["status"], "complete")
+        self.assertEqual(fake.inputs[0]["history"], first["history"])
+        self.assertEqual(fake.inputs[1]["history"], second["history"])
+        self.assertNotIn("sessionId", fake.inputs[0])
+        self.assertNotIn("sessionId", fake.inputs[1])
+        self.assertNotIn("camisa", json.dumps(fake.inputs[1], ensure_ascii=False).lower())
+
+    def test_history_over_contract_limit_requests_compact_context_without_inference(self):
+        fake = FakeModel({})
+        request = dict(TOOLS["communication.respond"]["examples"]["validInput"])
+        request["history"] = [{"role": "user", "text": f"turn-{index}"} for index in range(13)]
+
+        result = execute("communication.respond", request, model=fake)
+
+        self.assertEqual(result["code"], "context_limit")
+        self.assertIn("resumo explícito", result["message"])
+        self.assertEqual(fake.calls, 0)
+
+    def test_oversized_history_turn_is_a_context_limit(self):
+        fake = FakeModel({})
+        request = dict(TOOLS["communication.respond"]["examples"]["validInput"])
+        request["history"] = [{"role": "user", "text": "x" * 2001}]
+
+        result = execute("communication.respond", request, model=fake)
+
+        self.assertEqual(result["code"], "context_limit")
+        self.assertEqual(fake.calls, 0)
 
     def test_transform_marks_uncertain_output_for_review(self):
         fake = FakeModel({"text": "Delivery tomorrow.", "preservedEntities": [], "uncertainSpans": ["9h"]})
