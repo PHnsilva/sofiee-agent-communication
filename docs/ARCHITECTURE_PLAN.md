@@ -19,3 +19,7 @@ Referência para organização de especialidades: https://learn.chatgpt.com/docs
 Direção dos quatro agentes novos: módulos de domínio com schemas fechados e servidor MCP interno usando SDK oficial, preferindo runtime Python compatível com ferramentas selecionadas. Exceção para tecnologia precisa demonstrar necessidade na issue, sem mudar os contratos. Referência: https://github.com/modelcontextprotocol/python-sdk . Não instalar versões por antecipação neste planejamento.
 
 Execução semanal: ler [WEEKLY_EXECUTION.md](WEEKLY_EXECUTION.md). Espera de revisão/merge não deve impedir PRs dependentes sobre artefatos já disponíveis e tecnicamente validados, com base/ordem explícitas.
+
+## Coordenação no runtime
+
+O CLI oferece uma entrada aditiva para tarefas compostas. O runtime valida um grafo serial limitado, chama apenas ferramentas de Comunicação existentes e devolve estado e checkpoint ao consumidor, sem persistir dados. Dependências recebem somente campos explicitamente referenciados de saídas validadas. A coordenação não cria subagentes, não encaminha para chat externo e não muda a fronteira de autorização do consumidor. Consulte o fluxo e os limites em [INTERNAL_COORDINATION.md](INTERNAL_COORDINATION.md).
