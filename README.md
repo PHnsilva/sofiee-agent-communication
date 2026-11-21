@@ -57,6 +57,7 @@ O núcleo usa contratos v1, valida entradas e saídas e permite operações de t
 - O modelo usado precisa estar disponível num servidor Ollama em 127.0.0.1:11434 iniciado com cloud desativado. Defina SOFIEE_AGENT_LOCAL_MODEL com uma tag local validada antes de executar texto.
 - Candidatura/licença/medição e limites: [seleção local de modelo](docs/LOCAL_MODEL_SELECTION.md).
 - O CLI de uma chamada lê JSON {tool, input} de stdin e escreve um único resultado JSON. Ele não é um servidor MCP.
+- O CLI também aceita `{"task": ...}` para coordenação serial de ferramentas contratadas. Consulte [coordenação interna](docs/INTERNAL_COORDINATION.md) para contratos, limites, estados e ausência de persistência.
 
 Exemplo de chamada com texto de teste:
 

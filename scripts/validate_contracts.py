@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts" / "v1" / "contracts.json"
+TASK_CONTRACT = ROOT / "contracts" / "v1" / "task.schema.json"
 
 
 def matches(value, schema):
@@ -93,7 +94,12 @@ def main():
             result = matches(tool["examples"][key], schema)
             assert result == (key != "invalidInput"), f"{tool['name']}:{key} fixture mismatch"
             checked += 1
-    print(f"contract-fixtures: {checked} checked; tools: {len(tools)}; version: {contract['contractVersion']}")
+    task_schema = json.loads(TASK_CONTRACT.read_text(encoding="utf-8"))
+    assert task_schema["properties"]["contractVersion"]["const"] == contract["contractVersion"]
+    for key, expected in (("validInput", True), ("invalidInput", False)):
+        assert matches(task_schema["examples"][key], task_schema) == expected, f"task:{key} fixture mismatch"
+        checked += 1
+    print(f"contract-fixtures: {checked} checked; tools: {len(tools)}; tasks: 1; version: {contract['contractVersion']}")
 
 
 if __name__ == "__main__":
